@@ -1,0 +1,18 @@
+var n, r, t, u, v;
+begin
+	n := 112;
+	r := 36;
+	write n;
+	write r;
+  	while n <> r do begin
+		u := 55;
+		v := 213;
+		if r > n then 
+				r:= r - n
+			else
+				n:= n - r;
+		end;
+    		write r;
+  	end;
+  	write r;
+end

@@ -1,0 +1,19 @@
+var a, b, d;
+const c = 5;
+begin
+	a := 1;
+  	write a;
+  	d := 3 + c;
+  	write d;
+  	while b < 340 do begin
+		a := 643;
+		while b < 240 do begin
+	    		a := 2000;
+			d := 3;
+    			b := b + c * b + c;
+    			write b;
+		end;
+  	end;
+  	write a;
+  	write d;
+end

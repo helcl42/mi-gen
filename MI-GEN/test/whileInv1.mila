@@ -1,0 +1,17 @@
+var a, b, d;
+const c = 1;
+begin
+	a := 1;
+  	write a;
+  	d := 4;
+  	b := 3 + c;
+  	write d;
+  	while b<14 do begin
+    		a := 2;
+    		d := 45; 
+    		b := b + 1;
+    		write b;
+  	end;
+  	write a;
+  	write d;
+end

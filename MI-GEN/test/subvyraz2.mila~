@@ -1,0 +1,13 @@
+	{vypocet nejvetsiho spolecneho delitele}
+	const a = 4, b = 6;
+	var x, y;
+	begin
+		x := a;
+		y := b;
+			
+		y:= (y * y) - (y * y);		
+
+	write a;
+	write b;
+	write x;
+	end

@@ -1,0 +1,81 @@
+-----------------------------------
+Semestralni prace MI-GEN 
+Lubos Helcl helcllub@fit.cvut.cz
+-----------------------------------
+
+Jako téma semestrální práce jsem si zvolil zadání č.1:
+
+- Překladač vytváří korektní cílový kód z pohledu funkčnosti a používá optimalizaci 
+výpočtu numerických konstantních výrazu (constant folding) (pozn. tato optimalizace 
+je již implementována v dodaném front endu jazyka Mila).
+- Optimalizujte společné podvýrazy v rámci jednoho výrazu.
+- Optimalizujte používání cyklů přesunutím invariantů mimo tělo cyklu.
+
+Popis implementace:
+-----------------------------------
+V překladači jsou douplněny přepínače, kterými se dá zvolit, zda bude optimaliyovaný,
+zda se bude výstupní kód zapisovat do souboru, nebo vypisovat do konzole. 
+Navíc je pak možné pěkně sledovat změny v AST po a před optimalizací, kdy jsou uzly AST
+reprezentovány v závorkové notaci, o které si myslím, že je pro výpis podoby
+stromu nejvhodnější(a jednoduchá na implementaci).
+
+Popis překladu TM kódu:
+-----------------------------------
+Při implementaci generování kódu jsem z větší části vyšel překladače Prof. Loudena,
+který jsem nalezl na stránkach podpory jeho knihy Compiler construction. 
+Přibylo tak několik funkci pro generování instrukcí pro TinyMachine interpret,
+pro s registry, registry-pamět a další "malé" funkce pro řešení skoků v programu,
+které se nacházejí v hlavičkovém souboru gener.h. Celkově se dá říct, že vystup této
+implementace se snaži emulovat zasobnikovy pocitac.
+Původní zásobnívý počítač jsem odstranil, protože není k ničemu potřeba. 
+
+Optimalizace podvýrazů:
+-----------------------------------
+Tato optimalizace se uplatňuje na binární operace ve složitějších výrazech,
+kde se nejprve musí projí celý AST pro nalezení těchto uzlů(podtromů). Jakmile 
+je mámě vztvoříme mapu, kde klíč, jakožto ukazatel na konkrétní binární operaci,
+k sobě váže jednotlivé sobe sémanticky ekvivalentní podvýrazy(Bop-y).
+	Pokud se zjistí, že nějakému Bopu existují nějaké další, s ním ekvivaletní,
+vybere se největší množina a ta se nahradí. Pokud bychom nevybrali jako první 
+tu nejvetší, je možné, že bychom tím nedosáhly nejvyšší možné optimalizace. 
+Tato optimalizace by dala aplikovat několikrát po sobě na již optimaliyovaný strom, 
+ale toto má význam, jenom pro takřka miřádně zvláštní(často asi nesmyslný) kód.
+
+Optimalizace invariantů v cyklu:
+-----------------------------------
+Tato optimalizace funguje tim zpusobem, ze projde jednotlive prikazy v tele cyklu, kde se
+kontroluje, zda prikaz je prirazeni. Pokud ano, sleduje se prava strana, kde vyrazem musi byt
+konstanta, aby se prikaz byl zbytecne provaden v kazdem kole cyklu. Vsechny tyto "nadbytecne"
+prikazy uvnitr cyklu jsou ulozeny do mapy a nasledne se optimalizace provede tim zpusobem,
+ze se vytvori novy list prikazu, kam se na zacatek vlozi prave nalezene invarianty a az pak 
+zbytek puvodniho cyklu. Novy cyklus se priradi na misto puvodniho.
+
+Spoustění:
+-----------------------------------
+	./mi-gen <cesta k vstupnimu souboru>  -opt -f <cesta k vystupnimu.tm> [-d]
+
+Spusteni prekladace muze vypadat nasledovne:
+
+	./mi-gen ../../../test/gcd.mila  -opt -f output.tm [-d]
+
+ - prvni parametr je cesta ke vstupnimu souboru s kodem mila
+ - druhy parametr urcuje zda se bude uplatnovat optimalizace, ci nikoliv.
+ - treti rika, ze se vystup bude zapisovat do souboru, kde cesta k nemu je ctvrtym parametrem,
+    pokud nezadame ani jeden z nich, bude se vypisovat na standartni vystup.
+ - je mozne pouzit i paty prepinac(pokud zapisujeme do souboru), ktery zajisti ze generovany 
+    kod do TM bude s komentari.
+
+Závěr:
+-----------------------------------
+Myslím, že se zadaání podařilo splnit, překladač optimalizuje kód tak, jak se píše v zadání.
+Zkoušel jsem například uplatňovat optimalizaci podvýrazů vícekrát po sobě, ale pomohlo to
+jenom v extrémních případěch, které se v reálném kódu asi normálně neyskytnou, na invarianty
+toto vsak neplati, ty se nahradi vsechny hned v jednom pruchodu AST.
+	V implementaci jsem v samotné optimalizaci použité STL, které moc rád nepoužívám,
+ale ušetřílo to čas, který se o zkouškovém hodí. Semestralku jsem kompiloval prepinaci
+-pedantic -Wall na g++ 4.6 -> bez warningu
+Důležíté/nově vzniklé části kódu by měly být dostatečně zakomentované. Semestrálku jsem
+psal v IDE NetBeans 7.1.2, tak by mělo být možné otevřít jako projekt v Netbeans 7.x.x.
+
+
+

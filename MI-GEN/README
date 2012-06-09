@@ -1,0 +1,25 @@
+------------------------------------
+Semestralni prace MI-GEN
+helcllub@fit.cvut.cz
+------------------------------------
+
+- prelozena binarka bude pro provedeni prikazu make v ./dist/Debug/GNU-Linux-x86/
+- ve slozce ./Zprava je popis implmentace 
+- ve slozce ./TM jsou zdorjaky TinyMachine interpretu
+- ve slozce ./test jsou testovaci soubory jazyce mila
+
+
+Spoustění: (nachazime se v /dist/Debug/GNU-Linux-x86/)
+-----------------------------------
+	./mi-gen <cesta k vstupnimu souboru>  -opt -f <cesta k vystupnimu.tm> [-d]
+
+Spusteni prekladace muze vypadat nasledovne:
+
+	./mi-gen ../../../test/gcd.mila  -opt -f output.tm [-d]
+
+ - prvni parametr je cesta ke vstupnimu souboru s kodem mila
+ - druhy parametr urcuje zda se bude uplatnovat optimalizace, ci nikoliv.
+ - treti rika, ze se vystup bude zapisovat do souboru, kde cesta k nemu je ctvrtym parametrem,
+    pokud nezadame ani jeden z nich, bude se vypisovat na standartni vystup.
+ - je mozne pouzit i paty prepinac(pokud zapisujeme do souboru), ktery zajisti ze generovany 
+    kod do TM bude s komentari.

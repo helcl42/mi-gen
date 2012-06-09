@@ -1,0 +1,12 @@
+var n, r, t;
+begin
+	n := 10;
+	r := 1;
+  	while n > 1 do begin
+		t := 3;
+		r := n * r + (1 + 1 + 1 - 3);
+	    	n := n - 1;
+    		write r;
+  	end;
+  	write r;
+end
