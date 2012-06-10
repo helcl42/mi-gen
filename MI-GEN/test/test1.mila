@@ -1,0 +1,18 @@
+var x, y, a, b;
+const c = 55;
+    begin
+      x := 1;
+      y := 2;
+      a := (x*(y+1)) + (x*(y+1)) + (x * (x*(y+1)));
+      b := (a*(y+1)) + (a*(y+1)) + (x * (a*(y+1)));
+	write a;
+	write b;
+	write x;
+	write y;
+    end;
+
+
+
+
+
+

@@ -1,0 +1,17 @@
+var x, y, a;
+const c = 55;
+    begin
+      x := 1;
+      y := 2;
+      a := (x*(y+1)) + (x*(y+1)) + (x * (x*(y+1)));
+      a := (x*(y+1)) + (x*(y+1)) + (x * (x*(y+1)));
+	write a;
+	write x;
+	write y;
+    end;
+
+
+
+
+
+
