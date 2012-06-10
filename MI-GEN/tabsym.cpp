@@ -81,3 +81,22 @@ DruhId idPromKonst(char *id, int *v) {
     return Nedef;
 }
 
+void printTabSym() {
+    PrvekTab *p = TabSym;
+    while (p) {     
+        std::cout << "Ident: " << p->ident << " type: " << p->druh << " value: " << p->hodn << std::endl;
+        p = p->dalsi;
+    }
+}
+
+int getMaxIdentAddr() {
+    int max = 0;
+    PrvekTab *p = TabSym;
+    while (p) {     
+        if(p->druh == 1) {
+            max++;
+        }
+        p = p->dalsi;
+    }
+    return max;
+}

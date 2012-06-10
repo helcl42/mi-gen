@@ -18,6 +18,8 @@ void deklKonst(char*, int);
 void deklProm(char*);
 int adrProm(char*);
 DruhId idPromKonst(char*, int*);
+void printTabSym();
+int getMaxIdentAddr();
 
 
 #endif	/* TABSYM_H */

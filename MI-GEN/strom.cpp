@@ -6,6 +6,8 @@
 #define DEBUG_OPT
 
 extern FILE* debugPrint;
+extern int maxVarAddr;
+extern bool isOptimized;
 
 // konstruktory a destruktory
 
@@ -56,7 +58,7 @@ Assign::Assign(Var *v, Expr *e) {
 
 Assign::~Assign() {
     SAFE_DELETE(var);
-//  SAFE_DELETE(expr);
+    SAFE_DELETE(expr);
 }
 
 Write::Write(Expr *e) {
@@ -87,7 +89,7 @@ While::While(Expr *c, Statm *b) {
 
 While::~While() {
     SAFE_DELETE(cond);
-//  SAFE_DELETE(body);
+    //SAFE_DELETE(body);
 }
 
 StatmList::StatmList() {
@@ -242,7 +244,7 @@ bool Bop::areBopTreeTheSame(Expr* e1, Expr* e2) {
         return false;
     }
 
-    if (b2->op != b2->op) {
+    if (b1->op != b2->op) {
         return false;
     }
 
@@ -340,7 +342,7 @@ Node *UnMinus::Optimize() {
  * které tvorí seznam, ekvivalentních binárních operací
  */
 std::map<Bop*, std::vector<Bop*> > Bop::findEquivalentBops(std::vector<Bop*>& bops) {
-    std::map<Bop *, std::vector<Bop *> > same;    
+    std::map<Bop *, std::vector<Bop *> > same;
 
     for (unsigned int i = 0; i < bops.size(); ++i) {
         for (unsigned int j = i + 1; j < bops.size(); ++j) {
@@ -358,49 +360,45 @@ std::map<Bop*, std::vector<Bop*> > Bop::findEquivalentBops(std::vector<Bop*>& bo
 
 /*
  * funkce vraci Bop, ktery bude nejvyhodnejsi optimalizovat, 
- * nebo prvni, ktery je nejlesi s nejakym daslim
- * 
-  std::map<Bop *, std::vector<Bop *> >::iterator max;
-  Bop *maxBop = NULL;
-  int maxcount = 0;
-  for (duplit=dupl.begin(); duplit!=dupl.end(); ++duplit) {
-    if (duplit->second.size() > maxcount) {
-      maxcount = (*duplit).second.size();
-      max = duplit;
-      maxBop = duplit->first;
-    }
-  }
+ * nebo prvni, ktery je nejlesi s nejakym dalsim 
  */
 Bop* Bop::getWhereOptimize(std::map<Bop*, std::vector<Bop*> >& same) {
     std::map<Bop*, std::vector<Bop*> >::iterator itSame;
     unsigned int count = 0;
     Bop *ret = NULL;
-       
+
     for (itSame = same.begin(); itSame != same.end(); ++itSame) {
         if (itSame->second.size() > count) {
-            count = (*itSame).second.size();            
+            count = (*itSame).second.size();
             ret = itSame->first;
         }
     }
-    return ret;    
+    return ret;
 }
 
 /*
- * funkce pro samotnz replace za Var
+ * funkce pro samotny replace za Var
  */
 void Bop::replaceExpression(std::vector<Bop*>& bops) {
     this->left->replaceExpression(bops);
     this->right->replaceExpression(bops);
 
     std::vector<Bop *>::iterator ii;
+#ifdef DEBUG_OPT
+    std::cout << "BOPS size: " << bops.size() << std::endl;
+    
+    for (ii = bops.begin(); ii != bops.end(); ++ii) {
+        (*ii)->Print();
+    }
+#endif    
     for (ii = bops.begin(); ii != bops.end(); ++ii) {
         if (this->left == *ii) {
-            delete this->left;
-            this->left = new Var(0, true);
+            //delete this->left;
+            this->left = new Var(maxVarAddr, true);
         }
         if (this->right == *ii) {
-            delete this->right;
-            this->right = new Var(0, true);
+            //delete this->right;
+            this->right = new Var(maxVarAddr, true);
         }
     }
 }
@@ -412,11 +410,13 @@ Node *Assign::Optimize() {
     expr = (Var*) (expr->Optimize());
     // nejprve ve vyrazu najdeme vsechny podstromy
     // s binarni operaci, na nez si ulozime pointery
+    bool isSimple = true;
     std::vector<Bop*> bops;
     std::vector<Bop*>::iterator itBops;
     expr->getExpressionBops(bops);
+    
 #ifdef DEBUG_OPT
-    if(bops.size() > 0) {
+    if (bops.size() > 0) {
         printMessage("Optimalizace podvyrazu");
     }
     for (itBops = bops.begin(); itBops != bops.end(); ++itBops) {
@@ -426,6 +426,9 @@ Node *Assign::Optimize() {
     //najdeme mezi nimi ekvivalenty a vratime svazane v mape
     std::map<Bop*, std::vector<Bop*> >::iterator itSame;
     std::map<Bop*, std::vector<Bop*> > same = Bop::findEquivalentBops(bops);
+    if(same.size() > 0) {
+        isSimple = false;
+    }
 #ifdef DEBUG_OPT
     for (itSame = same.begin(); itSame != same.end(); ++itSame) {
         itSame->first->Print();
@@ -438,24 +441,29 @@ Node *Assign::Optimize() {
         // zde jsou podvyrazy k prepsani
         std::vector<Bop *> toReplace = same.find(bestBop)->second;
 #ifdef DEBUG_OPT
+        std::cout << "To Replace:" << std::endl;
         for (itBops = toReplace.begin(); itBops != toReplace.end(); ++itBops) {
             (*itBops)->Print();
         }
 #endif
         if (toReplace.size() > 0) {
-            // vytvorime nove prirazeni a nahradime vyraz
-//            Assign *newAssign = new Assign(new Var(0, false), new Numb(3));
-            toReplace.pop_back();
-            // vytvori se novy Stm blok a nahradi stavajici
-            StatmList *tmpList = new StatmList();
-            tmpList->setStm(this);
-            StatmList *newList = new StatmList(new Empty(), tmpList);
+            maxVarAddr++;
+            Assign *newAssign = new Assign(new Var(maxVarAddr, false), toReplace.back());                 
+            StatmList *oldList = new StatmList(this, NULL);            
+            StatmList *newList = new StatmList(newAssign, oldList);            
             expr->replaceExpression(toReplace);
+#ifdef DEBUG_OPT
+            std::cout << "Replaced:" << std::endl;
+            this->Print();
+#endif
             return newList;
         }
     }
-    //pokud se nepodarilo nalezt kandidata na optimalizaci,
-    //tak se zadna optimalizace nedela(na this se nic nemeni)
+    //pokud je vyraz na rpave strane jednoduchy(neobsahuje zadne repetice)
+    // tak nema pravo menit priznak, ze kod je plne optimalizovany
+    if(!isSimple){
+        isOptimized = true;
+    }
     return this;
 }
 
@@ -607,7 +615,7 @@ Node *StatmList::Optimize() {
     return this;
 }
 
-Node *Prog::Optimize() {
+Node *Prog::Optimize() {        
     stm = (StatmList*) (stm->Optimize());
     return this;
 }
@@ -852,8 +860,7 @@ void Prog::Translate() {
 
     emitRM("LD", mp, 0, acc1, "load memsize from 0");
     emitRM("ST", acc1, 0, acc1, "clear location 0");
-    emitComment("End of standard prelude.");
-
+    emitComment("End of standard prelude.");    
     // generovani z AST od korene stm(zacatatku spojaku)
     stm->Translate();
 
