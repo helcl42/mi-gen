@@ -6,8 +6,6 @@
 #define DEBUG_OPT
 
 extern FILE* debugPrint;
-extern int maxVarAddr;
-extern bool isOptimized;
 
 // konstruktory a destruktory
 
@@ -129,6 +127,25 @@ Prog::Prog(StatmList *s) {
 
 Prog::~Prog() {
     SAFE_DELETE(stm);
+}
+
+int Prog::maxVarAddr = 0;
+bool Prog::optimized = false;
+
+void Prog::setMaxVarAddr(int max) {
+    maxVarAddr = max;
+}
+
+void Prog::setOptimized(bool is) {
+    optimized = is;
+}
+
+int Prog::getMaxVarAddr() {
+    return maxVarAddr;
+}
+
+bool Prog::isOptimized() {
+    return optimized;
 }
 
 void Numb::Print() const {
@@ -386,7 +403,7 @@ void Bop::replaceExpression(std::vector<Bop*>& bops) {
     std::vector<Bop *>::iterator ii;
 #ifdef DEBUG_OPT
     std::cout << "BOPS size: " << bops.size() << std::endl;
-    
+
     for (ii = bops.begin(); ii != bops.end(); ++ii) {
         (*ii)->Print();
     }
@@ -394,11 +411,11 @@ void Bop::replaceExpression(std::vector<Bop*>& bops) {
     for (ii = bops.begin(); ii != bops.end(); ++ii) {
         if (this->left == *ii) {
             //delete this->left;
-            this->left = new Var(maxVarAddr, true);
+            this->left = new Var(Prog::getMaxVarAddr(), true);
         }
         if (this->right == *ii) {
             //delete this->right;
-            this->right = new Var(maxVarAddr, true);
+            this->right = new Var(Prog::getMaxVarAddr(), true);
         }
     }
 }
@@ -414,7 +431,7 @@ Node *Assign::Optimize() {
     std::vector<Bop*> bops;
     std::vector<Bop*>::iterator itBops;
     expr->getExpressionBops(bops);
-    
+
 #ifdef DEBUG_OPT
     if (bops.size() > 0) {
         printMessage("Optimalizace podvyrazu");
@@ -426,7 +443,7 @@ Node *Assign::Optimize() {
     //najdeme mezi nimi ekvivalenty a vratime svazane v mape
     std::map<Bop*, std::vector<Bop*> >::iterator itSame;
     std::map<Bop*, std::vector<Bop*> > same = Bop::findEquivalentBops(bops);
-    if(same.size() > 0) {
+    if (same.size() > 0) {
         isSimple = false;
     }
 #ifdef DEBUG_OPT
@@ -447,10 +464,12 @@ Node *Assign::Optimize() {
         }
 #endif
         if (toReplace.size() > 0) {
-            maxVarAddr++;
-            Assign *newAssign = new Assign(new Var(maxVarAddr, false), toReplace.back());                 
-            StatmList *oldList = new StatmList(this, NULL);            
-            StatmList *newList = new StatmList(newAssign, oldList);            
+            int maxVar = Prog::getMaxVarAddr();
+            maxVar++;
+            Prog::setMaxVarAddr(maxVar);
+            Assign *newAssign = new Assign(new Var(maxVar, false), toReplace.back());
+            StatmList *oldList = new StatmList(this, NULL);
+            StatmList *newList = new StatmList(newAssign, oldList);
             expr->replaceExpression(toReplace);
 #ifdef DEBUG_OPT
             std::cout << "Replaced:" << std::endl;
@@ -461,8 +480,8 @@ Node *Assign::Optimize() {
     }
     //pokud je vyraz na rpave strane jednoduchy(neobsahuje zadne repetice)
     // tak nema pravo menit priznak, ze kod je plne optimalizovany
-    if(!isSimple){
-        isOptimized = true;
+    if (!isSimple) {
+        Prog::setOptimized(true);
     }
     return this;
 }
@@ -615,7 +634,7 @@ Node *StatmList::Optimize() {
     return this;
 }
 
-Node *Prog::Optimize() {        
+Node *Prog::Optimize() {
     stm = (StatmList*) (stm->Optimize());
     return this;
 }
@@ -860,7 +879,7 @@ void Prog::Translate() {
 
     emitRM("LD", mp, 0, acc1, "load memsize from 0");
     emitRM("ST", acc1, 0, acc1, "clear location 0");
-    emitComment("End of standard prelude.");    
+    emitComment("End of standard prelude.");
     // generovani z AST od korene stm(zacatatku spojaku)
     stm->Translate();
 

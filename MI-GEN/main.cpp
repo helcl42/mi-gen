@@ -13,8 +13,6 @@
 FILE* outputCode;
 FILE* debugPrint = stdout;
 bool traceCode;
-int maxVarAddr;
-bool isOptimized;
 
 void printUsage() {
     printf("\n-------------------------------------------------------------\n");
@@ -43,10 +41,10 @@ int main(int argc, char *argv[]) {
     prog->Print();
 
     if (argc > 2) {
-        if (strncmp(argv[2], "-opt", 4) == 0) {
-            isOptimized = false;            
-            maxVarAddr = getMaxIdentAddr() - 1;            
-            while(!isOptimized) {
+        if (strncmp(argv[2], "-opt", 4) == 0) {                  
+            Prog::setOptimized(false);
+            Prog::setMaxVarAddr(getMaxIdentAddr() - 1);            
+            while(!Prog::isOptimized()) {
                 prog = (Prog*) (prog->Optimize());                                          
             }
             printMessage("AST s optimalizaci v bracket notaci:");
