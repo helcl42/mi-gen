@@ -1,4 +1,3 @@
-
 /* syntakticky analyzator */
 
 #include <stdio.h>
@@ -17,7 +16,7 @@ bool traceCode;
 void printUsage() {
     printf("\n-------------------------------------------------------------\n");
     printf("Usage: ./mila <input filepath> [-o] [-f outFilepath] [-d]\n");
-    printf("-o\t\tuse this option for optimized code\n");
+    printf("-opt\t\tuse this option for optimized code\n");
     printf("-f filepath\tuse this option to specify output file for code\n");
     printf("-d \t\t use this option for debug/comment output code\n");
     printf("-------------------------------------------------------------\n");
